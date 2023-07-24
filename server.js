@@ -5,7 +5,9 @@ const { pool } = require('./dbConfig');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const flash = require('express-flash');
-// const passport = require('passport');
+const passport = require('passport');
+const initializePassport = require('./passportConfig');
+initializePassport(passport);
 // const ejs = require('ejs');
 // const googleStrategy = require('./auth/google');
 // const twitterStrategy = require('./auth/twitter');
@@ -26,6 +28,10 @@ app.use(session({
     })
 );
 
+app.use(passport.initialize());
+
+app.use(passport.session());
+
 app.use(flash());
 
 // function isLoggedIn(req, res, next) {
@@ -40,16 +46,31 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
+app.get('/users/logout', (req, res) => {
+    req.logout((err) => {
+        if (err) {
+            console.error(err);
+        } else {
+            req.flash('success_msg', "You have logged out");
+            res.redirect('/users/login');
+        }
+    });
+});
+
+app.get('/users/dashboard', (req, res) => {
+    if (!req.user) {
+        res.redirect('/users/login');
+    } else {
+        res.render('dashboard', { user: req.user });
+    }
+});
+
 app.get('/users/register', (req, res) => {
     res.render('register', { errors: [] }); 
 });
 
 app.get('/users/login', (req, res) => {
     res.render('login');
-});
-
-app.get('/users/dashboard', (req, res) => {
-    res.render('dashboard', { user: "CONOR" });
 });
 
 // app.get('/', (req, res) => {
@@ -156,5 +177,25 @@ app.post('/users/register', async (req, res) => {
         )
     }
 });
+
+app.post('/users/login', passport.authenticate('local', {
+    successRedirect: '/users/dashboard',
+    failureRedirect: '/users/login',
+    failureFlash: true
+}));
+
+function checkAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return res.redirect('/users/dashboard');
+    }
+    next();
+}
+
+function checkNotAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/users/login');
+}
 
 app.listen(PORT, () => console.log(`Listening on: ${PORT}`));

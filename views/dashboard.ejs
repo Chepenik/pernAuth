@@ -7,8 +7,11 @@
     <title>Document</title>
 </head>
 <body>
-
     <a href="/users/logout">Logout</a>
-    <h1>Hello <%= user %></h1>
+    <% if (user && user.name) { %>
+        <h1>Hello <%= user.name.charAt(0).toUpperCase() + user.name.slice(1) %></h1>
+    <% } else { %>
+        <h1>Hello Guest</h1>
+    <% } %>
 </body>
 </html>

@@ -34,21 +34,29 @@ function initialize(passport) {
     passport.use(
         new LocalStrategy(
             { usernameField: 'email',
-            passwordField: 'password'
-        }, 
-        authenticateUser
+              passwordField: 'password'
+            }, 
+            authenticateUser
         )
     );
 
-    passport.serializeUser((user, done) => done(null, user.id));
+    passport.serializeUser((user, done) => {
+        // Store only the user's ID in the session
+        done(null, user.id);
+    });
 
     passport.deserializeUser((id, done) => {
         pool.query(`SELECT * FROM users WHERE id = $1`, [id], (err, results) => {
             if (err) {
                 return done(err);
             }
-            console.log(`ID is ${results.rows[0].id}`);
-            return done(null, results.rows[0]);
+            if (results.rows.length > 0) {
+                return done(null, results.rows[0]); // Pass the entire user object
+            } else {
+                return done(null, null); // User not found
+            }
         });
-    });
+    });    
 }
+
+module.exports = initialize;
