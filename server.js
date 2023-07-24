@@ -57,7 +57,7 @@ app.get('/users/logout', (req, res) => {
     });
 });
 
-app.get('/users/dashboard', (req, res) => {
+app.get('/users/dashboard', checkNotAuthenticated, (req, res) => {
     if (!req.user) {
         res.redirect('/users/login');
     } else {
@@ -65,11 +65,11 @@ app.get('/users/dashboard', (req, res) => {
     }
 });
 
-app.get('/users/register', (req, res) => {
+app.get('/users/register', checkAuthenticated, (req, res) => {
     res.render('register', { errors: [] }); 
 });
 
-app.get('/users/login', (req, res) => {
+app.get('/users/login', checkAuthenticated, (req, res) => {
     res.render('login');
 });
 
